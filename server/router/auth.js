@@ -82,28 +82,33 @@ router.post("/register", async (req, res) => {
 // LOGIN ROUTES
 
 router.post("/signin", async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res
-      .status(400)
-      .json({ error: "Please fill all the fields properly." });
-  }
-
   try {
-    const userLogin = await User.findOne({ email: email });
+    const { email, password } = req.body;
 
-    if (!userLogin) {
-      return res.status(400).json({ error: "Invalid Credentials" });
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ error: "Please fill all the fields properly." });
     }
 
-    const isMatch = await bcrypt.compare(password, userLogin.password);
-    const token = await userLogin.generateAuthToken();
+    const userLogin = await User.findOne({ email: email });
 
-    if (!isMatch) {
-      return res.status(400).json({ error: "Invalid Credentials" });
+    if (userLogin) {
+      const isMatch = await bcrypt.compare(password, userLogin.password);
+      const token = await userLogin.generateAuthToken();
+      console.log(token);
+
+      res.cookie("jwtoken", token, {
+        expires: new Date(Date.now() + 25982000000),
+        httpOnly: true,
+      });
+      if (!isMatch) {
+        return res.status(400).json({ error: "Invalid Credentials" });
+      } else {
+        res.status(200).json({ message: "Login Successful" });
+      }
     } else {
-      res.status(200).json({ message: "Login Successful" });
+      res.status(400).json({ error: "Invalid Credentials" });
     }
   } catch (err) {
     console.log(err);

@@ -27,56 +27,22 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  tokens: [
+    {
+      token: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
 });
 
-//? secure the password with the bcrypt
-// userSchema.pre("save", async function (next) {
-//   // console.log("pre method", this);
-//   const user = this;
-
-//   if (!user.isModified("password")) {
-//     next();
-//   }
-
-//   try {
-//     const saltRound = await bcrypt.genSalt(10);
-//     const hash_password = await bcrypt.hash(user.password, saltRound);
-//     user.password = hash_password;
-//   } catch (error) {
-//     next(error);
-//   }
-// });
-
-// // compare the password
-// userSchema.methods.comparePassword = async function (password) {
-//   return bcrypt.compare(password, this.password);
-// };
-
-// // json web token
-// userSchema.methods.generateToken = async function () {
-//   try {
-//     return jwt.sign(
-//       {
-//         userId: this._id.toString(),
-//         email: this.email,
-//         isAdmin: this.isAdmin,
-//       },
-//       process.env.JWT_SECRET_KEY,
-//       {
-//         expiresIn: "30d",
-//       }
-//     );
-//   } catch (error) {
-//     console.error(error);
-//   }
-// };
-
 // define the model or the collection name
-
 // We are hashing a password
 
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
+    console.log("Hi I am pre");
     this.password = await bcrypt.hash(this.password, 12);
     this.cpassword = await bcrypt.hash(this.password, 12);
   }
@@ -84,10 +50,13 @@ userSchema.pre("save", async function (next) {
 });
 
 // Generating Authenticating Token
-userSchema.method.generateAuthToken = async function () {
+userSchema.methods.generateAuthToken = async function () {
   try {
     // let token = jwt.sign(payload, secret OR Private key)
-    let token = jwt.sign({});
+    let token = jwt.sign({ _id: this._id }, process.env.SECRET_KEY);
+    this.tokens = this.tokens.concat({ token: token });
+    await this.save();
+    return token;
   } catch (err) {
     console.log(err);
   }

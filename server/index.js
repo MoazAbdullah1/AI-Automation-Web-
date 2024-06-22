@@ -25,6 +25,7 @@ middleware();
 
 // Arrow Function
 app.get("/home", middleware, (req, res) => {
+  // res.cookie("lol", "moaz");
   res.send("Hello, MERN! Soon home Coming Udpates... from index js");
 });
 

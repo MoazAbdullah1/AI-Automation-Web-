@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-// const bcrypt = require("bcryptjs");
+const bcrypt = require("bcryptjs");
 // const jwt = require("jsonwebtoken");
 
 const userSchema = new mongoose.Schema({
@@ -16,6 +16,10 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   password: {
+    type: String,
+    required: true,
+  },
+  cpassword: {
     type: String,
     required: true,
   },
@@ -68,5 +72,16 @@ const userSchema = new mongoose.Schema({
 // };
 
 // define the model or the collection name
+
+// We are hashing a password
+
+userSchema.pre("save", async function (next) {
+  if (this.isModified("password")) {
+    this.password = await bcrypt.hash(this.password, 12);
+    this.cpassword = await bcrypt.hash(this.password, 12);
+  }
+  next();
+});
+
 const User = new mongoose.model("User", userSchema);
 module.exports = User;
